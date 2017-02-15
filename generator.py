@@ -7,9 +7,13 @@ from nationalities import core_nationalities
 class The7thSeaCharacterGenerator(object):
     def __init__(self):
         self.SOURCES = []
-        self.nationalities = []
+        self.nationalities = ["Choose One"]
         for item in core_nationalities:
             self.nationalities.append(item['nationality'])
+        self.base_trait_points = 2
+        self.skills = ['Aim', 'Athletics', 'Brawl', 'Convince', 'Empathy', 'Hide', 'Intimidate',
+                       'Notice', 'Perform', 'Ride', 'Sailing', 'Scholarship', 'Tempt', 'Theft',
+                       'Warfare', 'Weaponry']
 
     def run(self):
         self.select_sources()
@@ -54,7 +58,7 @@ class The7thSeaCharacterGenerator(object):
         self.selected.grid(row=0, rowspan=2, column=2)
         okay_button.grid(row=2, column=2)
         self.source_select.mainloop()
-    
+
     def character_generator(self):
         root = Tk()
         root.wm_title("7th Sea Character Generator")
@@ -88,26 +92,29 @@ class The7thSeaCharacterGenerator(object):
         final_score_label = Label(trait_frame, text='Final Score')
         base_score_label = Label(trait_frame, text='Base Score')
         brawn_label = Label(trait_frame, text='Brawn')
-        finesse_label = Label(trait_frame, text='Finesse:')                                       
-        resolve_label = Label(trait_frame, text='Resolve:')                                       
-        wits_label = Label(trait_frame, text='Wits:')                                             
-        panache_label = Label(trait_frame, text='Panache:')                                       
-        traits_label.grid(row=0, column=0)                                                        
-        final_score_label.grid(row=0, column=1)                                                   
-        base_score_label.grid(row=0, column=2)                                                    
-        brawn_label.grid(row=1, column=0)                                                         
-        finesse_label.grid(row=2, column=0)                       
-        resolve_label.grid(row=3, column=0)                       
-        wits_label.grid(row=4, column=0)                          
-        panache_label.grid(row=5, column=0)                       
-        trait_frame.pack()                                        
-        general.add(trait_pane)                                   
-        advantages = Frame(generation_tabs)                       
-        skills = Frame(generation_tabs)                           
-        generation_tabs.add(general, text='General')              
-        generation_tabs.add(advantages, text='Advantages')        
-        generation_tabs.add(skills, text='Skills')                
-        generation_tabs.pack()                                    
-        character_tabs.add(page, text=name_var.get())           
-        character_tabs.pack()                    
+        finesse_label = Label(trait_frame, text='Finesse:')
+        resolve_label = Label(trait_frame, text='Resolve:')
+        wits_label = Label(trait_frame, text='Wits:')
+        panache_label = Label(trait_frame, text='Panache:')
+        traits_label.grid(row=0, column=0)
+        final_score_label.grid(row=0, column=1)
+        base_score_label.grid(row=0, column=2)
+        brawn_label.grid(row=1, column=0)
+        finesse_label.grid(row=2, column=0)
+        resolve_label.grid(row=3, column=0)
+        wits_label.grid(row=4, column=0)
+        panache_label.grid(row=5, column=0)
+        trait_frame.pack()
+        general.add(trait_pane)
+        advantages = Frame(generation_tabs)
+        skills = Frame(generation_tabs)
+        Label(skills, text='Skill').grid(row=0, column=0, sticky=W)
+        for i in range(len(self.skills)):
+            Label(skills, text=self.skills[i]).grid(row=i + 1, column=0, sticky=W)
+        generation_tabs.add(general, text='General')
+        generation_tabs.add(advantages, text='Advantages')
+        generation_tabs.add(skills, text='Skills')
+        generation_tabs.pack()
+        character_tabs.add(page, text=name_var.get())
+        character_tabs.pack()
         root.mainloop()
