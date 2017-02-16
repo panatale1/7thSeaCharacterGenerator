@@ -4,16 +4,19 @@ from ttk import *
 
 from nationalities import core_nationalities
 
+TRAITS = ['Brawn', 'Finesse', 'Resolve', 'Wits', 'Panache']
+SKILLS = ['Aim', 'Athletics', 'Brawl', 'Convince', 'Empathy', 'Hide', 'Intimidate', 'Notice',
+          'Perform', 'Ride', 'Sailing', 'Scholarship', 'Tempt', 'Theft', 'Warfare', 'Weaponry']
+TRAIT_PANE_LABELS = ['Trait:', 'Final Score', 'Base Score']
+
 class The7thSeaCharacterGenerator(object):
     def __init__(self):
+        self.unnamed_characters = 0
         self.SOURCES = []
         self.nationalities = ["Choose One"]
         for item in core_nationalities:
             self.nationalities.append(item['nationality'])
         self.base_trait_points = 2
-        self.skills = ['Aim', 'Athletics', 'Brawl', 'Convince', 'Empathy', 'Hide', 'Intimidate',
-                       'Notice', 'Perform', 'Ride', 'Sailing', 'Scholarship', 'Tempt', 'Theft',
-                       'Warfare', 'Weaponry']
 
     def run(self):
         self.select_sources()
@@ -59,18 +62,31 @@ class The7thSeaCharacterGenerator(object):
         okay_button.grid(row=2, column=2)
         self.source_select.mainloop()
 
-    def character_generator(self):
-        root = Tk()
-        root.wm_title("7th Sea Character Generator")
-        character_tabs = Notebook(root)
-        page = Frame(character_tabs, height=5, width=5)
-        generation_tabs = Notebook(page)
-        general = PanedWindow(generation_tabs, orient=HORIZONTAL)
-        info_pane = Frame(general)
-        info_frame=Labelframe(info_pane, text='Character Info')
-        name_label = Label(info_frame, text='Name:')
+    def make_root(self):
+        self.root = Tk()
+        self.root.wm_title("7th Seas Character Generator")
+
+    def make_character_tabs(self):
+        self.character_tabs = Notebook(self.root)
+
+    def make_new_character(self):
+        page = Frame(self.character_tabs)
+        generator_tabs = Notebook(self.character_tabs)
         name_var = StringVar()
-        name_var.set('Unnamed Character 1')
+        name_var.set("Unnamed Character {0}".format(self.unnamed_characters + 1))
+        self.unnamed_characters += 1
+        self.make_general_tab(generator_tabs, name_var)
+        self.make_advantages_tab(generator_tabs)
+        self.make_skills_tab(generator_tabs)
+        generator_tabs.pack()
+        self.character_tabs.add(page, text=name_var.get())
+        self.character_tabs.pack()
+
+    def make_general_tab(self, notebook, name_var):
+        general = PanedWindow(notebook, orient=HORIZONTAL)
+        info_pane = Frame(general)
+        info_frame = Labelframe(info_pane, text='Character Info')
+        name_label = Label(info_frame, text='Name:')
         name_box = Entry(info_frame, textvariable=name_var)
         player_label = Label(info_frame, text='Player:')
         player_box = Entry(info_frame)
@@ -88,33 +104,27 @@ class The7thSeaCharacterGenerator(object):
         general.add(info_pane)
         trait_pane = Frame(general)
         trait_frame = Labelframe(trait_pane, text='Traits')
-        traits_label = Label(trait_frame, text='Trait')
-        final_score_label = Label(trait_frame, text='Final Score')
-        base_score_label = Label(trait_frame, text='Base Score')
-        brawn_label = Label(trait_frame, text='Brawn')
-        finesse_label = Label(trait_frame, text='Finesse:')
-        resolve_label = Label(trait_frame, text='Resolve:')
-        wits_label = Label(trait_frame, text='Wits:')
-        panache_label = Label(trait_frame, text='Panache:')
-        traits_label.grid(row=0, column=0)
-        final_score_label.grid(row=0, column=1)
-        base_score_label.grid(row=0, column=2)
-        brawn_label.grid(row=1, column=0)
-        finesse_label.grid(row=2, column=0)
-        resolve_label.grid(row=3, column=0)
-        wits_label.grid(row=4, column=0)
-        panache_label.grid(row=5, column=0)
+        for i in range(len(TRAIT_PANE_LABELS)):
+            Label(trait_frame, text=TRAIT_PANE_LABELS[i]).grid(row=0, column=i)
+        for i in range(len(TRAITS)):
+            Label(trait_frame, text=TRAITS[i]).grid(row=i + 1, column=0, sticky=W)
         trait_frame.pack()
         general.add(trait_pane)
-        advantages = Frame(generation_tabs)
-        skills = Frame(generation_tabs)
-        Label(skills, text='Skill').grid(row=0, column=0, sticky=W)
-        for i in range(len(self.skills)):
-            Label(skills, text=self.skills[i]).grid(row=i + 1, column=0, sticky=W)
-        generation_tabs.add(general, text='General')
-        generation_tabs.add(advantages, text='Advantages')
-        generation_tabs.add(skills, text='Skills')
-        generation_tabs.pack()
-        character_tabs.add(page, text=name_var.get())
-        character_tabs.pack()
-        root.mainloop()
+        notebook.add(general, text='General')
+
+    def make_advantages_tab(self, notebook):
+        advantages = Frame(notebook)
+        notebook.add(advantages, text='Advantages')
+
+    def make_skills_tab(self, notebook):
+        skills = Labelframe(notebook, text='Skills')
+        for i in range(len(SKILLS)):
+            Label(skills, text=SKILLS[i]).grid(row=i, column=0, sticky=W)
+        notebook.add(skills, text='Skills')
+
+
+    def character_generator(self):
+        self.make_root()
+        self.make_character_tabs()
+        self.make_new_character()
+        self.root.mainloop()
