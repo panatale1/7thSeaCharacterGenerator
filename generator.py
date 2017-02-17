@@ -2,6 +2,7 @@ from Tkinter import *
 import tkMessageBox
 from ttk import *
 
+from backgrounds import core_backgrounds
 from nationalities import core_nationalities
 
 TRAITS = ['Brawn', 'Finesse', 'Resolve', 'Wits', 'Panache']
@@ -13,22 +14,35 @@ class The7thSeaCharacterGenerator(object):
     def __init__(self):
         self.unnamed_characters = 0
         self.SOURCES = []
-        self.nationalities = ["Choose One"]
+        self.nationalities = [
+            {'nationality': "Choose One",
+             'bonus_traits': []}
+        ]
         for item in core_nationalities:
-            self.nationalities.append(item['nationality'])
+            self.nationalities.append(item)
+        self.backgrounds = []
+        for item in core_backgrounds:
+            self.backgrounds.append(item)
         self.base_trait_points = 2
         self.name_vars = {}
 
     def run(self):
         self.select_sources()
         self.update_nationalities()
+        self.update_backgrounds()
         self.character_generator()
 
     def update_nationalities(self):
         if 'Pirate Nations' in self.SOURCES:
             from nationalities import pirate_nationalities
             for item in pirate_nationalities:
-                self.nationalities.append(item['nationality'])
+                self.nationalities.append(item)
+
+    def update_backgrounds(self):
+        if 'Pirate Nations' in self.SOURCES:
+            from backgrounds import pirate_backgrounds
+            for item in pirate_backgrounds:
+                self.backgrounds.append(item)
 
     def add_source(self):
         if not self.select_from.get(self.select_from.curselection()) in self.selected.get(0, END):
@@ -88,15 +102,24 @@ class The7thSeaCharacterGenerator(object):
         generator_tabs = Notebook(page)
         name_var_key = 'name_var{0}'.format(self.unnamed_characters + 1)
         self.name_vars.update({name_var_key: StringVar()})
-        self.name_vars[name_var_key].set("Unnamed Characters {0}".format(self.unnamed_characters + 1))
+        self.name_vars[name_var_key].set("Unnamed Character {0}".format(self.unnamed_characters + 1))
         self.unnamed_characters += 1
         self.make_general_tab(generator_tabs, name_var_key)
+        self.make_backgrounds_tab(generator_tabs)
         self.make_advantages_tab(generator_tabs)
         self.make_skills_tab(generator_tabs)
         generator_tabs.pack()
         self.character_tabs.add(page, text=self.name_vars[name_var_key].get())
         self.character_tabs.pack()
         self.character_tabs.select(self.unnamed_characters - 1)
+
+    def change_name(self, event):
+        tab_text = self.character_tabs.tab('current')['text']
+        for key in self.name_vars.iterkeys():
+            if self.name_vars[key].get() == tab_text:
+                break
+        self.name_vars[key].set(event.widget.get())
+        self.character_tabs.tab('current', text=event.widget.get())
 
     def make_general_tab(self, notebook, name_var_key):
         general = PanedWindow(notebook, orient=HORIZONTAL)
@@ -109,7 +132,7 @@ class The7thSeaCharacterGenerator(object):
         nation_label = Label(info_frame, text='Nationality:')
         nationality_var = StringVar(info_frame)
         nationality_var.set("Choose One")
-        nationalities = apply(OptionMenu, (info_frame, nationality_var) + tuple(self.nationalities))
+        nationalities = apply(OptionMenu, (info_frame, nationality_var) + tuple([item['nationality'] for item in self.nationalities]))
         name_label.grid(row=0, column=0, sticky=W)
         name_box.grid(row=0, column=1, sticky=E)
         player_label.grid(row=1, column=0, sticky=W)
@@ -126,7 +149,64 @@ class The7thSeaCharacterGenerator(object):
             Label(trait_frame, text=TRAITS[i]).grid(row=i + 1, column=0, sticky=W)
         trait_frame.pack()
         general.add(trait_pane)
+        name_box.bind('<KeyRelease-BackSpace>', self.change_name, add='+')
+        name_box.bind('<Key>', self.change_name, add='+')
+        name_box.bind('<FocusOut>', self.change_name, add='+')
         notebook.add(general, text='General')
+
+    def make_backgrounds_tab(self, notebook):
+        def add_background():
+            background = backgrounds_to_choose.get(backgrounds_to_choose.curselection())
+            if len(backgrounds_chosen.get(0, END)) == 2 and background not in backgrounds_chosen.get(0, END):
+                tkMessageBox.showinfo('Oops!', 'You can only choose two backgrounds.')
+            elif not background in backgrounds_chosen.get(0, END):
+                backgrounds_chosen.insert(END, background)
+        def remove_background():
+            backgrounds_chosen.delete(ANCHOR)
+        def display_background(event):
+            background_name = event.widget.get(event.widget.curselection())
+            for item in self.backgrounds:
+                if item['background'] == background_name:
+                    background = item
+                    break
+            advantages = 'Advantages: {0}, {1}\n'.format(background['advantages'][0], background['advantages'][1])
+            skills = 'Skills: {0}, {1}, {2}, {3}, {4}\n'.format(
+                background['skills'][0], background['skills'][1], background['skills'][2], background['skills'][3],
+                background['skills'][4])
+            background_display.config(state=NORMAL)
+            background_display.delete(1.0, END)
+            background_display.insert(END, background_name)
+            background_display.insert(END, '\n')
+            background_display.insert(END, background['description'])
+            background_display.insert(END, '\n')
+            background_display.insert(END, 'Quirk: {0}'.format(background['quirk']))
+            background_display.insert(END, '\n')
+            background_display.insert(END, advantages)
+            background_display.insert(END, skills)
+            background_display.insert(
+                END, 'Nation: {0}\n'.format(background['nationality_restriction'] if background['nationality_restriction'] else 'Any'))
+            if background['duelist_style']:
+                background_display.insert(END, 'Dueling Style: {0}'.format(background['duelist_style']))
+            background_display.config(state=DISABLED)
+
+        backgrounds = Panedwindow(notebook, orient=VERTICAL)
+        backgrounds_pane = Panedwindow(backgrounds, orient=HORIZONTAL)
+        backgrounds_to_choose = Listbox(backgrounds_pane)
+        for item in self.backgrounds:
+            backgrounds_to_choose.insert(END, item['background'])
+        background_buttons = Frame(backgrounds_pane)
+        Button(background_buttons, text='Add >', command=add_background).grid(row=0, column=0)
+        Button(background_buttons, text='< Remove', command=remove_background).grid(row=1, column=0)
+        backgrounds_chosen = Listbox(backgrounds_pane)
+        backgrounds_pane.add(backgrounds_to_choose)
+        backgrounds_pane.add(background_buttons)
+        backgrounds_pane.add(backgrounds_chosen)
+        backgrounds_pane.pack()
+        background_display = Text(backgrounds)
+        background_display.config(state=DISABLED)
+        background_display.pack()
+        backgrounds_to_choose.bind('<ButtonRelease-1>', display_background)
+        notebook.add(backgrounds, text='Backgrounds')
 
     def make_advantages_tab(self, notebook):
         advantages = Frame(notebook)
