@@ -17,6 +17,7 @@ class The7thSeaCharacterGenerator(object):
         for item in core_nationalities:
             self.nationalities.append(item['nationality'])
         self.base_trait_points = 2
+        self.name_vars = {}
 
     def run(self):
         self.select_sources()
@@ -44,6 +45,15 @@ class The7thSeaCharacterGenerator(object):
         self.SOURCES = self.selected.get(0, END)
         self.source_select.destroy()
 
+    def add_all_sources(self):
+        choices = self.select_from.get(0, END)
+        if choices not in self.selected.get(1, END):
+            for choice in choices:
+                self.selected.insert(END, choice)
+
+    def remove_all_sources(self):
+        self.selected.delete(1, END)
+
     def select_sources(self):
         self.source_select = Tk()
         self.source_select.wm_title("Select Sources")
@@ -55,11 +65,15 @@ class The7thSeaCharacterGenerator(object):
         add_button = Button(self.source_select, text='Add >', command=self.add_source)
         remove_button = Button(self.source_select, text='< Remove', command=self.remove_source)
         okay_button = Button(self.source_select, text='Done', command=self.source_done)
-        self.select_from.grid(row=0, rowspan=2, column=0)
+        add_all_button = Button(self.source_select, text='Add All >>', command=self.add_all_sources)
+        remove_all_button = Button(self.source_select, text='<< Remove All', command=self.remove_all_sources)
+        self.select_from.grid(row=0, rowspan=4, column=0)
         add_button.grid(row=0, column=1)
-        remove_button.grid(row=1, column=1)
-        self.selected.grid(row=0, rowspan=2, column=2)
-        okay_button.grid(row=2, column=2)
+        add_all_button.grid(row=1, column=1)
+        remove_all_button.grid(row=2, column=1)
+        remove_button.grid(row=3, column=1)
+        self.selected.grid(row=0, rowspan=4, column=2)
+        okay_button.grid(row=4, column=2)
         self.source_select.mainloop()
 
     def make_root(self):
@@ -71,23 +85,25 @@ class The7thSeaCharacterGenerator(object):
 
     def make_new_character(self):
         page = Frame(self.character_tabs)
-        generator_tabs = Notebook(self.character_tabs)
-        name_var = StringVar()
-        name_var.set("Unnamed Character {0}".format(self.unnamed_characters + 1))
+        generator_tabs = Notebook(page)
+        name_var_key = 'name_var{0}'.format(self.unnamed_characters + 1)
+        self.name_vars.update({name_var_key: StringVar()})
+        self.name_vars[name_var_key].set("Unnamed Characters {0}".format(self.unnamed_characters + 1))
         self.unnamed_characters += 1
-        self.make_general_tab(generator_tabs, name_var)
+        self.make_general_tab(generator_tabs, name_var_key)
         self.make_advantages_tab(generator_tabs)
         self.make_skills_tab(generator_tabs)
         generator_tabs.pack()
-        self.character_tabs.add(page, text=name_var.get())
+        self.character_tabs.add(page, text=self.name_vars[name_var_key].get())
         self.character_tabs.pack()
+        self.character_tabs.select(self.unnamed_characters - 1)
 
-    def make_general_tab(self, notebook, name_var):
+    def make_general_tab(self, notebook, name_var_key):
         general = PanedWindow(notebook, orient=HORIZONTAL)
         info_pane = Frame(general)
         info_frame = Labelframe(info_pane, text='Character Info')
         name_label = Label(info_frame, text='Name:')
-        name_box = Entry(info_frame, textvariable=name_var)
+        name_box = Entry(info_frame, textvariable=self.name_vars[name_var_key])
         player_label = Label(info_frame, text='Player:')
         player_box = Entry(info_frame)
         nation_label = Label(info_frame, text='Nationality:')
@@ -122,9 +138,15 @@ class The7thSeaCharacterGenerator(object):
             Label(skills, text=SKILLS[i]).grid(row=i, column=0, sticky=W)
         notebook.add(skills, text='Skills')
 
+    def make_menu_pane(self):
+        menu_pane = Frame(self.root)
+        new_button = Button(menu_pane, text='New', command=self.make_new_character)
+        new_button.pack(side=LEFT)
+        menu_pane.pack()
 
     def character_generator(self):
         self.make_root()
+        self.make_menu_pane()
         self.make_character_tabs()
         self.make_new_character()
         self.root.mainloop()
