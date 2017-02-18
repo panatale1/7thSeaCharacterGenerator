@@ -71,4 +71,5 @@ class The7thSeaCharacter(object):
     def set_nationality(self, nationality):
         self.nationality = nationality
 
-    def 
+    def add_reward(self, steps, reward):
+        pass
