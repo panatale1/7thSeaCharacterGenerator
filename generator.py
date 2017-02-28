@@ -8,7 +8,7 @@ from nationalities import core_nationalities
 TRAITS = ['Brawn', 'Finesse', 'Resolve', 'Wits', 'Panache']
 SKILLS = ['Aim', 'Athletics', 'Brawl', 'Convince', 'Empathy', 'Hide', 'Intimidate', 'Notice',
           'Perform', 'Ride', 'Sailing', 'Scholarship', 'Tempt', 'Theft', 'Warfare', 'Weaponry']
-TRAIT_PANE_LABELS = ['Trait:', 'Final Score', 'Base Score']
+TRAIT_PANE_LABELS = ['Trait:', 'Final Score', 'Base Score', 'Modifier', 'Nation Modifier']
 
 class The7thSeaCharacterGenerator(object):
     def __init__(self):
@@ -147,6 +147,10 @@ class The7thSeaCharacterGenerator(object):
             Label(trait_frame, text=TRAIT_PANE_LABELS[i]).grid(row=0, column=i)
         for i in range(len(TRAITS)):
             Label(trait_frame, text=TRAITS[i]).grid(row=i + 1, column=0, sticky=W)
+        for i in range(5):
+            Entry(trait_frame, width=10).grid(row=i + 1, column=1, sticky=E)
+        for i in range(5):
+            Label(trait_frame, width=10, text=2).grid(row=i + 1, column=2)
         trait_frame.pack()
         general.add(trait_pane)
         name_box.bind('<KeyRelease-BackSpace>', self.change_name, add='+')
